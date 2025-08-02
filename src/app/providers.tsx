@@ -26,10 +26,21 @@ export const electroneumMainnet = defineChain({
 });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="min-h-screen arcade-bg flex items-center justify-center">
+      <div className="text-white font-arcade">Loading...</div>
+    </div>;
+  }
 
   return (
     <PrivyProvider
-      appId="cm81bj6ce0093zs43wrr4cizm"
+      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || "cm81bj6ce0093zs43wrr4cizm"}
       config={{
         loginMethods: ['email', 'wallet'],
         appearance: {

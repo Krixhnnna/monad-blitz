@@ -10,6 +10,7 @@ type WalletContextType = {
   ensName: string | null;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => Promise<void>;
+  isLoading: boolean;
 };
 
 const WalletContext = createContext<WalletContextType | null>(null);
@@ -20,32 +21,44 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [ensName, setEnsName] = useState<string | null>(null);
   const [shortAddress, setShortAddress] = useState<string | null>(null);
   const [walletConnected, setWalletConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Update wallet state when authentication changes
   useEffect(() => {
-    if (ready && authenticated && user?.wallet?.address) {
-      const address = user.wallet.address;
-      setWalletAddress(address);
-      setShortAddress(`${address.slice(0, 6)}...${address.slice(-4)}`);
-      setWalletConnected(true);
-    } else {
-      setWalletAddress(null);
-      setShortAddress(null);
-      setWalletConnected(false);
+    if (ready) {
+      setIsLoading(false);
+      if (authenticated && user?.wallet?.address) {
+        const address = user.wallet.address;
+        setWalletAddress(address);
+        setShortAddress(`${address.slice(0, 6)}...${address.slice(-4)}`);
+        setWalletConnected(true);
+      } else {
+        setWalletAddress(null);
+        setShortAddress(null);
+        setWalletConnected(false);
+      }
     }
   }, [ready, authenticated, user]);
 
   // Connect wallet function
   const connectWallet = async (): Promise<void> => {
-    if (!authenticated) {
-      await login();
+    try {
+      if (!authenticated) {
+        await login();
+      }
+    } catch (error) {
+      console.error('Failed to connect wallet:', error);
     }
   };
 
   // Disconnect wallet function
   const disconnectWallet = async (): Promise<void> => {
-    if (authenticated) {
-      await logout();
+    try {
+      if (authenticated) {
+        await logout();
+      }
+    } catch (error) {
+      console.error('Failed to disconnect wallet:', error);
     }
   };
 
@@ -74,6 +87,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     ensName,
     connectWallet,
     disconnectWallet,
+    isLoading,
   };
 
   return (
